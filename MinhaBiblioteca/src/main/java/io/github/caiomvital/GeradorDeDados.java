@@ -4,438 +4,320 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * Classe responsável por gerar dados fictícios para testes,
+ * como nomes, CPFs, telefones e endereços brasileiros aleatórios.
+ */
 public class GeradorDeDados {
 
-	public static String gerarNomeAleatorio() {
-	    try {
-	        URI uri = URI.create("https://randomuser.me/api/?nat=BR");
-	        URL url = uri.toURL();
+    private static final String URL_NOMES = "https://raw.githubusercontent.com/caiomvital/json-files/refs/heads/main/nomes_proprios.json";
+    private static final String URL_RUAS = "https://raw.githubusercontent.com/caiomvital/json-files/refs/heads/main/ruas_rmr.json";
+    private static final String URL_ESTADOS_CAPITAIS = "https://raw.githubusercontent.com/caiomvital/json-files/refs/heads/main/estados_capitais.json";
+    private static final String URL_RUAS_POR_CIDADE = "https://raw.githubusercontent.com/caiomvital/json-files/refs/heads/main/ruas_por_cidade.json";
 
-	        HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
-	        conexao.setRequestMethod("GET");
+    private static Map<String, Map<String, String>> estadosCapitaisMap = null;
+    private static Map<String, List<String>> ruasPorCidadeMap = null;
+    private static Map<String, List<String>> nomesMap = null;
+    private static Map<String, List<String>> ruasMap = null;
+    private static final Random random = new Random();
 
-	        if (conexao.getResponseCode() == 200) {
-	            BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
-	            StringBuilder resposta = new StringBuilder();
-	            String linha;
+    // --- Carregadores ---
 
-	            while ((linha = leitor.readLine()) != null) {
-	                resposta.append(linha);
-	            }
-	            leitor.close();
-	            conexao.disconnect();
-
-	            String json = resposta.toString();
-	            String nome = json.split("\"first\":\"")[1].split("\"")[0];
-	            //String sobrenome = json.split("\"last\":\"")[1].split("\"")[0];
-
-	            return nome; // + " " + sobrenome;
-	        } else {
-	            return null;
-	        }
-	    } catch (Exception e) {
-	        return null;
-	    }
-	}
-		
-    public static String gerarNomeCompletoAleatorio() {
+    private static void carregarNomes() {
+        if (nomesMap != null) return;
         try {
-            URI uri = URI.create("https://randomuser.me/api/?nat=BR");
-            URL url = uri.toURL();
-
-            HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
+            URI uri = new URI(URL_NOMES);
+            HttpURLConnection conexao = (HttpURLConnection) uri.toURL().openConnection();
             conexao.setRequestMethod("GET");
-
             if (conexao.getResponseCode() == 200) {
                 BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 StringBuilder resposta = new StringBuilder();
                 String linha;
-
                 while ((linha = leitor.readLine()) != null) {
                     resposta.append(linha);
                 }
                 leitor.close();
                 conexao.disconnect();
-
-                String json = resposta.toString();
-                String nome = json.split("\"first\":\"")[1].split("\"")[0];
-                String sobrenome = json.split("\"last\":\"")[1].split("\"")[0];
-
-                return nome + " " + sobrenome;
-            } else {
-                return "Erro na requisição";
+                ObjectMapper mapper = new ObjectMapper();
+                nomesMap = mapper.readValue(resposta.toString(), new TypeReference<Map<String, List<String>>>() {});
             }
         } catch (Exception e) {
-            return "Erro: " + e.getMessage();
+            e.printStackTrace();
         }
     }
-    
- // Método para gerar um número de CPF aleatório
-    public static String gerarCPF() {
-        Random random = new Random();
-        StringBuilder cpf = new StringBuilder();
 
-        for (int i = 0; i < 9; i++) {
-            cpf.append(random.nextInt(10)); // Adiciona números aleatórios
-            if (i == 2 || i == 5) {
-                cpf.append("."); // Adiciona pontos no formato
-            }
-        }
-        cpf.append("-");
-        for (int i = 0; i < 2; i++) {
-            cpf.append(random.nextInt(10)); // Adiciona os dois últimos dígitos
-        }
-
-        return cpf.toString();
-    }
-
-    // Método para gerar um número de telefone fixo aleatório
-    public static String gerarTelefoneFixo() {
-        Random random = new Random();
-        StringBuilder telefoneFixo = new StringBuilder();
-
-        telefoneFixo.append("(");
-        telefoneFixo.append(11 + random.nextInt(89)); // Agora gera DDDs de 11 a 99
-        telefoneFixo.append(") ");
-        telefoneFixo.append(2 + random.nextInt(8)); // O primeiro dígito deve ser entre 2 e 9
-        for (int i = 0; i < 7; i++) {
-            telefoneFixo.append(random.nextInt(10)); // 8 dígitos
-        }
-
-        return telefoneFixo.toString();
-    }
-
-    // Método para gerar um número de telefone celular aleatório
-    public static String gerarTelefoneCelular() {
-        Random random = new Random();
-        StringBuilder telefoneCelular = new StringBuilder();
-
-        telefoneCelular.append("(");
-        telefoneCelular.append(11 + random.nextInt(89)); // Agora gera DDDs de 11 a 99
-        telefoneCelular.append(") ");
-        telefoneCelular.append(9); // O primeiro dígito deve ser sempre 9 para celulares
-        for (int i = 0; i < 8; i++) {
-            telefoneCelular.append(random.nextInt(10)); // 9 dígitos
-        }
-
-        return telefoneCelular.toString();
-    }
-    
-    public static String gerarEnderecoAleatorio() {
+    private static void carregarRuas() {
+        if (ruasMap != null) return;
         try {
-            // Conecta à API usando URI (não mais URL direto)
-            URI uri = URI.create("https://randomuser.me/api/?nat=BR");
-            URL url = uri.toURL();  // Convertendo a URI para URL
-
-            HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
+            URI uri = new URI(URL_RUAS);
+            HttpURLConnection conexao = (HttpURLConnection) uri.toURL().openConnection();
             conexao.setRequestMethod("GET");
-
             if (conexao.getResponseCode() == 200) {
                 BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 StringBuilder resposta = new StringBuilder();
                 String linha;
-
                 while ((linha = leitor.readLine()) != null) {
                     resposta.append(linha);
                 }
                 leitor.close();
                 conexao.disconnect();
-
-                // Obtém a resposta JSON como String
-                String jsonResponse = resposta.toString();
-
-                // Manipulação do JSON manual com verificações
-                String nomeRua = extractJsonValue(jsonResponse, "\"name\":\"", "\"");
-                String numeroRuaStr = extractJsonValue(jsonResponse, "\"number\":", ",");
-                String cidade = extractJsonValue(jsonResponse, "\"city\":\"", "\"");
-                String estado = extractJsonValue(jsonResponse, "\"state\":\"", "\"");
-                String cep = extractJsonValue(jsonResponse, "\"postcode\":", ",");
-
-                // Verifica se o número da rua pode ser convertido para um inteiro
-                int numeroRua = 0;
-                try {
-                    numeroRua = Integer.parseInt(numeroRuaStr);
-                } catch (NumberFormatException e) {
-                    numeroRua = 0; // Valor default caso a conversão falhe
-                }
-
-                // Formata o CEP para o padrão "00.000-000"
-                String cepFormatado = formatarCep(cep);
-
-                // Garantir que o nome da rua e o número fiquem bem formatados (sem espaços extras)
-                String enderecoFormatado = nomeRua.trim() + " " + numeroRua + ", " + cidade + " - " + estado + " - " + cepFormatado;
-
-                // Retornando o endereço formatado
-                return enderecoFormatado;
-            } else {
-                return "Erro na requisição";
+                ObjectMapper mapper = new ObjectMapper();
+                ruasMap = mapper.readValue(resposta.toString(), new TypeReference<Map<String, List<String>>>() {});
             }
         } catch (Exception e) {
-            return "Erro: " + e.getMessage();
+            e.printStackTrace();
         }
     }
 
-    // Método auxiliar para extrair valores do JSON de forma segura
-    private static String extractJsonValue(String json, String start, String end) {
+    private static void carregarEstadosCapitais() {
+        if (estadosCapitaisMap != null) return;
         try {
-            int startIndex = json.indexOf(start);
-            if (startIndex == -1) return "Valor não encontrado";
-            startIndex += start.length();
-            int endIndex = json.indexOf(end, startIndex);
-            if (endIndex == -1) return "Valor não encontrado";
-            return json.substring(startIndex, endIndex).trim();
+            URI uri = new URI(URL_ESTADOS_CAPITAIS);
+            HttpURLConnection conexao = (HttpURLConnection) uri.toURL().openConnection();
+            conexao.setRequestMethod("GET");
+            if (conexao.getResponseCode() == 200) {
+                BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
+                StringBuilder resposta = new StringBuilder();
+                String linha;
+                while ((linha = leitor.readLine()) != null) {
+                    resposta.append(linha);
+                }
+                leitor.close();
+                conexao.disconnect();
+                ObjectMapper mapper = new ObjectMapper();
+                estadosCapitaisMap = mapper.readValue(resposta.toString(), new TypeReference<Map<String, Map<String, String>>>() {});
+            }
         } catch (Exception e) {
-            return "Erro ao extrair valor";
+            e.printStackTrace();
         }
     }
 
-    // Método para formatar o CEP no padrão brasileiro "00.000-000"
-    private static String formatarCep(String cep) {
-        // Se o CEP tem menos de 8 dígitos, adiciona os 3 dígitos finais de forma aleatória
-        if (cep.length() == 5) {
-            cep = cep + (int) (Math.random() * 1000);  // Adiciona 3 dígitos aleatórios
+    private static void carregarRuasPorCidade() {
+        if (ruasPorCidadeMap != null) return;
+        try {
+            URI uri = new URI(URL_RUAS_POR_CIDADE);
+            HttpURLConnection conexao = (HttpURLConnection) uri.toURL().openConnection();
+            conexao.setRequestMethod("GET");
+            if (conexao.getResponseCode() == 200) {
+                BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
+                StringBuilder resposta = new StringBuilder();
+                String linha;
+                while ((linha = leitor.readLine()) != null) {
+                    resposta.append(linha);
+                }
+                leitor.close();
+                conexao.disconnect();
+                ObjectMapper mapper = new ObjectMapper();
+                ruasPorCidadeMap = mapper.readValue(resposta.toString(), new TypeReference<Map<String, List<String>>>() {});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        // Formata o CEP como "00.000-000"
-        if (cep.length() == 8) {
-            return cep.substring(0, 5) + "-" + cep.substring(5);
+    }
+
+    /**
+     * Gera um endereço aleatório a partir da sigla de um estado.
+     * Seleciona uma rua da capital do estado correspondente.
+     *
+     * @param sigla Sigla do estado brasileiro (ex: "SP", "RJ", "BA").
+     * @return Endereço formatado no padrão "Rua Nome, número X, Cidade - Estado".
+     */
+    public static String gerarRuaPorEstado(String sigla) {
+        carregarEstadosCapitais();
+        carregarRuasPorCidade();
+
+        Map<String, String> estadoInfo = estadosCapitaisMap.get(sigla.toUpperCase());
+        if (estadoInfo == null) {
+            return "Sigla inválida.";
+        }
+
+        String capital = estadoInfo.get("capital");
+        List<String> ruas = ruasPorCidadeMap.get(capital);
+
+        if (ruas == null || ruas.isEmpty()) {
+            return "Nenhuma rua encontrada para este estado.";
+        }
+
+        String rua = ruas.get(random.nextInt(ruas.size()));
+        int numero = random.nextInt(9999) + 1;
+
+        return rua + ", número " + numero + ", " + capital.replace("_", " ").toUpperCase() + " - " + sigla.toUpperCase();
+    }
+
+    // --- Geradores de nomes ---
+
+    private static String gerarNomeMasculino() {
+        carregarNomes();
+        List<String> masculinos = nomesMap.get("nomes_masculinos");
+        return masculinos.get(random.nextInt(masculinos.size()));
+    }
+
+    private static String gerarNomeFeminino() {
+        carregarNomes();
+        List<String> femininos = nomesMap.get("nomes_femininos");
+        return femininos.get(random.nextInt(femininos.size()));
+    }
+
+    private static String gerarNomeNeutro() {
+        carregarNomes();
+        List<String> neutros = nomesMap.get("nomes_neutros");
+        return neutros.get(random.nextInt(neutros.size()));
+    }
+
+    private static String gerarSobrenome() {
+        carregarNomes();
+        List<String> sobrenomes = nomesMap.get("sobrenomes");
+        return sobrenomes.get(random.nextInt(sobrenomes.size()));
+    }
+
+    private static String gerarNomeCompletoMasculino() {
+        return gerarNomeMasculino() + " " + gerarSobrenome();
+    }
+
+    private static String gerarNomeCompletoFeminino() {
+        return gerarNomeFeminino() + " " + gerarSobrenome();
+    }
+
+    private static String gerarNomeCompletoNeutro() {
+        return gerarNomeNeutro() + " " + gerarSobrenome();
+    }
+
+    /**
+     * Gera um nome aleatório masculino, feminino ou neutro.
+     *
+     * @return Um nome próprio aleatório.
+     */
+    public static String gerarNomeAleatorio() {
+        carregarNomes();
+        int tipo = random.nextInt(3);
+        if (tipo == 0) {
+            return gerarNomeMasculino();
+        } else if (tipo == 1) {
+            return gerarNomeFeminino();
         } else {
-            return "CEP inválido";
-        }
-    }
-    
-    public static String gerarRuaENumero() {
-        try {
-            // Conecta à API usando URI (não mais URL direto)
-            URI uri = URI.create("https://randomuser.me/api/?nat=BR");
-            URL url = uri.toURL();  // Convertendo a URI para URL
-
-            HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
-            conexao.setRequestMethod("GET");
-
-            if (conexao.getResponseCode() == 200) {
-                BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
-                StringBuilder resposta = new StringBuilder();
-                String linha;
-
-                while ((linha = leitor.readLine()) != null) {
-                    resposta.append(linha);
-                }
-                leitor.close();
-                conexao.disconnect();
-
-                // Obtém a resposta JSON como String
-                String jsonResponse = resposta.toString();
-
-                // Manipulação do JSON manual com verificações
-                String nomeRua = extractJsonValue(jsonResponse, "\"name\":\"", "\"");
-                String numeroRuaStr = extractJsonValue(jsonResponse, "\"number\":", ",");
-
-                // Verifica se o número da rua pode ser convertido para um inteiro
-                int numeroRua = 0;
-                try {
-                    numeroRua = Integer.parseInt(numeroRuaStr);
-                } catch (NumberFormatException e) {
-                    numeroRua = 0; // Valor default caso a conversão falhe
-                }
-
-                // Retornando a rua e o número formatados
-                return nomeRua.trim() + ", número " + numeroRua;
-            } else {
-                return "Erro na requisição";
-            }
-        } catch (Exception e) {
-            return "Erro: " + e.getMessage();
-        }
-    }
-    
-    public static String gerarEnderecoSimplificado() {
-        try {
-            // Conecta à API usando URI (não mais URL direto)
-            URI uri = URI.create("https://randomuser.me/api/?nat=BR");
-            URL url = uri.toURL();  // Convertendo a URI para URL
-
-            HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
-            conexao.setRequestMethod("GET");
-
-            if (conexao.getResponseCode() == 200) {
-                BufferedReader leitor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
-                StringBuilder resposta = new StringBuilder();
-                String linha;
-
-                while ((linha = leitor.readLine()) != null) {
-                    resposta.append(linha);
-                }
-                leitor.close();
-                conexao.disconnect();
-
-                // Obtém a resposta JSON como String
-                String jsonResponse = resposta.toString();
-
-                // Manipulação do JSON manual com verificações
-                String nomeRua = extractJsonValue(jsonResponse, "\"name\":\"", "\"");
-                String numeroRuaStr = extractJsonValue(jsonResponse, "\"number\":", ",");
-                String cidade = extractJsonValue(jsonResponse, "\"city\":\"", "\"");
-                String estado = extractJsonValue(jsonResponse, "\"state\":\"", "\"");
-
-                // Verifica se o número da rua pode ser convertido para um inteiro
-                int numeroRua = 0;
-                try {
-                    numeroRua = Integer.parseInt(numeroRuaStr);
-                } catch (NumberFormatException e) {
-                    numeroRua = 0; // Valor default caso a conversão falhe
-                }
-
-                // Verifica se o estado é válido e extrai a sigla do estado
-                String siglaEstado = getSiglaEstado(estado);
-
-                // Retornando o endereço simplificado
-                return "Rua " + nomeRua.trim() + ", número " + numeroRua + ", " + cidade + " - " + siglaEstado;
-            } else {
-                return "Erro na requisição";
-            }
-        } catch (Exception e) {
-            return "Erro: " + e.getMessage();
+            return gerarNomeNeutro();
         }
     }
 
-    private static String getSiglaEstado(String estado) {
-        // Mapeamento de estados e suas siglas
-        Map<String, String> estadosSiglas = new HashMap<>();
-        estadosSiglas.put("Acre", "AC");
-        estadosSiglas.put("Alagoas", "AL");
-        estadosSiglas.put("Amapá", "AP");
-        estadosSiglas.put("Amazonas", "AM");
-        estadosSiglas.put("Bahia", "BA");
-        estadosSiglas.put("Ceará", "CE");
-        estadosSiglas.put("Distrito Federal", "DF");
-        estadosSiglas.put("Espírito Santo", "ES");
-        estadosSiglas.put("Goiás", "GO");
-        estadosSiglas.put("Maranhão", "MA");
-        estadosSiglas.put("Mato Grosso", "MT");
-        estadosSiglas.put("Mato Grosso do Sul", "MS");
-        estadosSiglas.put("Minas Gerais", "MG");
-        estadosSiglas.put("Pará", "PA");
-        estadosSiglas.put("Paraíba", "PB");
-        estadosSiglas.put("Paraná", "PR");
-        estadosSiglas.put("Pernambuco", "PE");
-        estadosSiglas.put("Piauí", "PI");
-        estadosSiglas.put("Rio de Janeiro", "RJ");
-        estadosSiglas.put("Rio Grande do Norte", "RN");
-        estadosSiglas.put("Rio Grande do Sul", "RS");
-        estadosSiglas.put("Rondônia", "RO");
-        estadosSiglas.put("Roraima", "RR");
-        estadosSiglas.put("Santa Catarina", "SC");
-        estadosSiglas.put("São Paulo", "SP");
-        estadosSiglas.put("Sergipe", "SE");
-        estadosSiglas.put("Tocantins", "TO");
-
-        // Retorna a sigla do estado ou "Desconhecido" se não for encontrado
-        return estadosSiglas.getOrDefault(estado, "Desconhecido");
+    /**
+     * Gera um nome completo aleatório (nome + sobrenome), podendo ser masculino, feminino ou neutro.
+     *
+     * @return Nome completo aleatório.
+     */
+    public static String gerarNomeCompletoAleatorio() {
+        carregarNomes();
+        int tipo = random.nextInt(3);
+        if (tipo == 0) {
+            return gerarNomeCompletoMasculino();
+        } else if (tipo == 1) {
+            return gerarNomeCompletoFeminino();
+        } else {
+            return gerarNomeCompletoNeutro();
+        }
     }
-  
-    //private static final String URL_PASTEBIN = "https://pastebin.com/raw/gfimE4Kn";
-    private static final String URL_GITHUB = "https://raw.githubusercontent.com/caiomvital/json-files/refs/heads/main/ruas_rmr.json";
 
- // Função para desfazer as entidades HTML
- private static String desfazerEntidadesHTML(String input) {
-     input = input.replace("&quot;", "\"");
-     input = input.replace("&amp;", "&");
-     input = input.replace("&lt;", "<");
-     input = input.replace("&gt;", ">");
-     input = input.replace("&nbsp;", " ");
-     return input;
- }
+    /**
+     * Gera um nome aleatório de acordo com o gênero informado.
+     *
+     * @param genero "masculino", "feminino" ou "neutro".
+     * @return Nome próprio aleatório.
+     */
+    public static String gerarNomeAleatorio(String genero) {
+        carregarNomes();
+        genero = genero.toLowerCase();
+        if (genero.startsWith("m")) return gerarNomeMasculino();
+        else if (genero.startsWith("f")) return gerarNomeFeminino();
+        else return gerarNomeNeutro();
+    }
 
- private static String obterRuaAleatoria() {
-     try {
-         // Criando URI e convertendo para URL
-         URI uri = new URI(URL_GITHUB);
-         URL url = uri.toURL();
+    /**
+     * Gera um nome completo aleatório (nome + sobrenome) de acordo com o gênero informado.
+     *
+     * @param genero "masculino", "feminino" ou "neutro".
+     * @return Nome completo aleatório.
+     */
+    public static String gerarNomeCompletoAleatorio(String genero) {
+        return gerarNomeAleatorio(genero) + " " + gerarSobrenome();
+    }
 
-         // Fazendo a requisição para o Pastebin
-         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-         connection.setRequestMethod("GET");
+    // --- Gerador de CPF ---
 
-         // Lendo a resposta
-         BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-         StringBuilder sb = new StringBuilder();
-         String line;
-         while ((line = reader.readLine()) != null) {
-             sb.append(line);
-         }
-         reader.close();
+    /**
+     * Gera um CPF válido brasileiro, com dígitos verificadores corretos.
+     *
+     * @return CPF no formato "000.000.000-00".
+     */
+    public static String gerarCPF() {
+        int[] cpf = new int[11];
+        for (int i = 0; i < 9; i++) {
+            cpf[i] = random.nextInt(10);
+        }
+        cpf[9] = calcularDigitoVerificador(cpf, 9);
+        cpf[10] = calcularDigitoVerificador(cpf, 10);
 
-         // Obtendo o conteúdo da resposta
-         String resposta = sb.toString();
+        return String.format("%d%d%d.%d%d%d.%d%d%d-%d%d",
+            cpf[0], cpf[1], cpf[2],
+            cpf[3], cpf[4], cpf[5],
+            cpf[6], cpf[7], cpf[8],
+            cpf[9], cpf[10]
+        );
+    }
 
-         // Remover tags HTML
-         String respostaSemHTML = resposta.replaceAll("<[^>]*>", "");
+    private static int calcularDigitoVerificador(int[] cpf, int pos) {
+        int soma = 0;
+        for (int i = 0; i < pos; i++) {
+            soma += cpf[i] * (pos + 1 - i);
+        }
+        int resto = soma % 11;
+        return (resto < 2) ? 0 : 11 - resto;
+    }
 
-         // Desfazer entidades HTML
-         String respostaFinal = desfazerEntidadesHTML(respostaSemHTML);
+    // --- Geradores de telefone ---
 
-         // Agora, vamos procurar pelas listas de ruas das cidades
-         String recifeRuasString = respostaFinal.substring(respostaFinal.indexOf("\"recife\"") + 8, respostaFinal.indexOf("\"olinda\"")).trim();
-         String olindaRuasString = respostaFinal.substring(respostaFinal.indexOf("\"olinda\"") + 8, respostaFinal.lastIndexOf("}")).trim();
+    /**
+     * Gera um telefone fixo brasileiro aleatório.
+     *
+     * @return Telefone no formato "(XX) XXXX-XXXX".
+     */
+    public static String gerarTelefoneFixo() {
+        int ddd = 11 + random.nextInt(89);
+        int primeiroDigito = 2 + random.nextInt(7);
+        int restante = random.nextInt(9000000) + 1000000;
+        return String.format("(%02d) %d%07d", ddd, primeiroDigito, restante);
+    }
 
-         // Processar ruas de Recife
-         String[] recifeRuasArray = recifeRuasString.substring(recifeRuasString.indexOf("[") + 1, recifeRuasString.lastIndexOf("]")).split(",");
-         // Processar ruas de Olinda
-         String[] olindaRuasArray = olindaRuasString.substring(olindaRuasString.indexOf("[") + 1, olindaRuasString.lastIndexOf("]")).split(",");
+    /**
+     * Gera um telefone celular brasileiro aleatório.
+     *
+     * @return Telefone no formato "(XX) 9XXXX-XXXX".
+     */
+    public static String gerarTelefoneCelular() {
+        int ddd = 11 + random.nextInt(89);
+        int restante = random.nextInt(90000000) + 10000000;
+        return String.format("(%02d) 9%08d", ddd, restante);
+    }
 
-         // Gerar um índice aleatório para selecionar uma rua
-         Random random = new Random();
-         String ruaSelecionada;
-         String cidadeSelecionada;
-         String estado = "PE"; // Como Recife e Olinda estão em Pernambuco
+    // --- Gerador de endereço RMR (Recife/Olinda) ---
 
-         // Selecionando aleatoriamente de Recife ou Olinda
-         if (random.nextBoolean()) {
-             cidadeSelecionada = "Recife";
-             ruaSelecionada = recifeRuasArray[random.nextInt(recifeRuasArray.length)].trim().replace("\"", "");
-         } else {
-             cidadeSelecionada = "Olinda";
-             ruaSelecionada = olindaRuasArray[random.nextInt(olindaRuasArray.length)].trim().replace("\"", "");
-         }
-
-         // Retorna a rua, cidade e estado no formato desejado
-         return ruaSelecionada + ", " + cidadeSelecionada + " - " + estado;
-
-     } catch (Exception e) {
-         e.printStackTrace();
-         return "Erro ao obter rua: " + e.getMessage();
-     }
- }
- 
- private static String adicionarNumeroNoMeio(String endereco) {
-	    // Dividindo o endereço para inserir o número
-	    int indiceVirgula = endereco.indexOf(",");
-	    
-	    // Verificando se encontrou a vírgula para inserir o número após a rua
-	    if (indiceVirgula != -1) {
-	        // Gerando um número aleatório entre 1 e 999
-	        Random random = new Random();
-	        int numeroAleatorio = random.nextInt(999) + 1;
-
-	        // Construindo a nova string
-	        String parteRua = endereco.substring(0, indiceVirgula);  // Rua + o que vem antes da vírgula
-	        String parteRestante = endereco.substring(indiceVirgula);  // O restante (Cidade - Estado)
-	        
-	        // Inserindo o número após a rua
-	        return parteRua + ", nº " + numeroAleatorio + parteRestante;
-	    } else {
-	        // Caso não consiga encontrar a vírgula para dividir, retornar o endereço sem alteração
-	        return endereco;
-	    }
-	}
-
- public static String obterRua() {
-	 return adicionarNumeroNoMeio(obterRuaAleatoria());
- }
- 
+    /**
+     * Gera um endereço aleatório entre Recife e Olinda usando dados reais.
+     *
+     * @return Endereço no formato "Rua Nome, nº X, Cidade - PE".
+     */
+    public static String gerarEnderecoAleatorio() {
+        carregarRuas();
+        boolean escolherRecife = random.nextBoolean();
+        List<String> ruas = escolherRecife ? ruasMap.get("recife") : ruasMap.get("olinda");
+        String rua = ruas.get(random.nextInt(ruas.size()));
+        int numero = random.nextInt(9999) + 1;
+        String cidade = escolherRecife ? "Recife" : "Olinda";
+        return rua + ", nº " + numero + ", " + cidade + " - PE";
+    }
 }
