@@ -29,10 +29,9 @@ O **GeradorDeDados** facilita a criação de informações fictícias úteis par
     <artifactId>gerador-de-dados</artifactId>
     <version>1.1.0</version>
 </dependency>
+
 2. Exemplo de Uso:
-java
-Copiar
-Editar
+
 import io.github.caiomvital.GeradorDeDados;
 
 public class Main {
