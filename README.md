@@ -7,7 +7,7 @@ O **GeradorDeDados** facilita a criação de informações fictícias úteis par
 
 ## Funcionalidades
 
-- ✅ **Geração de Nomes Aleatórios:** Nomes comuns serão gerados a partir de um JSON.
+- ✅ **Geração de Nomes Aleatórios:** Masculinos, femininos e neutros, sem dependência de API externa.
 - ✅ **Geração de Nome Completo:** Combinação de nomes e sobrenomes realistas.
 - ✅ **Geração de CPF:** Cria CPFs válidos e formatados no padrão brasileiro.
 - ✅ **Geração de Telefones:** Telefones fixos e celulares com DDDs realistas (11 a 99).
@@ -29,3 +29,37 @@ O **GeradorDeDados** facilita a criação de informações fictícias úteis par
     <artifactId>gerador-de-dados</artifactId>
     <version>1.1.0</version>
 </dependency>
+2. Exemplo de Uso:
+java
+Copiar
+Editar
+import io.github.caiomvital.GeradorDeDados;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Nome Aleatório: " + GeradorDeDados.gerarNomeAleatorio());
+        System.out.println("Nome Completo Aleatório: " + GeradorDeDados.gerarNomeCompletoAleatorio());
+        System.out.println("CPF: " + GeradorDeDados.gerarCPF());
+        System.out.println("Telefone Fixo: " + GeradorDeDados.gerarTelefoneFixo());
+        System.out.println("Telefone Celular: " + GeradorDeDados.gerarTelefoneCelular());
+        System.out.println("Endereço Aleatório: " + GeradorDeDados.gerarEnderecoAleatorio());
+        System.out.println("Endereço no RJ: " + GeradorDeDados.gerarRuaPorEstado("RJ"));
+    }
+}
+Licença
+Este projeto é licenciado sob a Licença Apache 2.0.
+Veja o arquivo LICENSE para mais detalhes.
+
+Melhorias futuras (ideias)
+Geração de CNPJ.
+
+Geração de datas de nascimento.
+
+Integração opcional com APIs de CEP.
+
+Mais opções de formatos de telefone.
+
+Observação
+A geração de dados não consulta dados reais: todos os nomes, ruas e informações são fictícios ou gerados a partir de listas públicas.
+
+Pode ser usado livremente para projetos de teste, desenvolvimento ou simulações.
