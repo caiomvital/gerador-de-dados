@@ -7,7 +7,7 @@ O **GeradorDeDados** facilita a criação de informações fictícias úteis par
 
 ## Funcionalidades
 
-- ✅ **Geração de Nomes Aleatórios:** Masculinos, femininos e neutros, sem dependência de API externa.
+- ✅ **Geração de Nomes Aleatórios:** Nomes comuns coletados de um arquivo JSON.
 - ✅ **Geração de Nome Completo:** Combinação de nomes e sobrenomes realistas.
 - ✅ **Geração de CPF:** Cria CPFs válidos e formatados no padrão brasileiro.
 - ✅ **Geração de Telefones:** Telefones fixos e celulares com DDDs realistas (11 a 99).
