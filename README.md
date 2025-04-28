@@ -29,9 +29,11 @@ O **GeradorDeDados** facilita a criação de informações fictícias úteis par
     <artifactId>gerador-de-dados</artifactId>
     <version>1.1.0</version>
 </dependency>
+```
 
-2. Exemplo de Uso:
+### 2. Exemplo de Uso:
 
+```java
 import io.github.caiomvital.GeradorDeDados;
 
 public class Main {
@@ -45,20 +47,21 @@ public class Main {
         System.out.println("Endereço no RJ: " + GeradorDeDados.gerarRuaPorEstado("RJ"));
     }
 }
-Licença
-Este projeto é licenciado sob a Licença Apache 2.0.
-Veja o arquivo LICENSE para mais detalhes.
+```
 
-Melhorias futuras (ideias)
-Geração de CNPJ.
+## Licença
 
-Geração de datas de nascimento.
+Este projeto é licenciado sob a [Licença Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-Integração opcional com APIs de CEP.
+## Melhorias futuras (ideias)
 
-Mais opções de formatos de telefone.
+- Geração de CNPJ.
+- Geração de datas de nascimento.
+- Integração opcional com APIs de CEP.
+- Mais opções de formatos de telefone.
 
-Observação
-A geração de dados não consulta dados reais: todos os nomes, ruas e informações são fictícios ou gerados a partir de listas públicas.
+## Observação
 
-Pode ser usado livremente para projetos de teste, desenvolvimento ou simulações.
+- A geração de dados **não consulta dados reais**: todos os nomes, ruas e informações são fictícios ou gerados a partir de listas públicas.
+- Pode ser usado livremente para projetos de teste, desenvolvimento ou simulações.
+
